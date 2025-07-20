@@ -2394,6 +2394,36 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
                 // --- ENHANCED Notification Bell Logic ---
                 let hasUnreadNotifications = false;
 
+                // BUG FIX: Function to manage the set of notified alerts for the current day in localStorage
+                function getTodaysNotifiedSet() {{
+                    const todayStr = toISODateString(new Date());
+                    const key = 'notifiedAlerts';
+                    try {{
+                        const data = JSON.parse(localStorage.getItem(key));
+                        if (data && data.date === todayStr) {{
+                            return new Set(data.ids);
+                        }}
+                    }} catch (e) {{
+                        // Ignore parsing errors
+                    }}
+                    // If no data, or data is from a previous day, return a new empty set
+                    return new Set();
+                }}
+
+                function saveTodaysNotifiedSet(notifiedSet) {{
+                    const todayStr = toISODateString(new Date());
+                    const data = {{
+                        date: todayStr,
+                        ids: [...notifiedSet]
+                    }};
+                    try {{
+                        localStorage.setItem('notifiedAlerts', JSON.stringify(data));
+                    }} catch (e) {{
+                        console.error("Failed to save notified set to localStorage", e);
+                    }}
+                }}
+
+
                 // **MODIFIED**: addNotification now accepts the full alert object
                 function addNotification(type, message, alertObject = null) {{
                     const now = new Date();
@@ -2413,8 +2443,16 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
                     document.getElementById('notification-bell').classList.add('new-notification');
                     
                     if (type === 'alert' && alertObject) {{
-                        showLivePopupAlert(alertObject);
-                        showWebNotification(alertObject);
+                        // BUG FIX: Check against persistent storage before showing notifications
+                        const notifiedSet = getTodaysNotifiedSet();
+                        const alertId = `${{alertObject.stock}}-${{alertObject.type}}`;
+                        
+                        if (!notifiedSet.has(alertId)) {{
+                            showLivePopupAlert(alertObject);
+                            showWebNotification(alertObject);
+                            notifiedSet.add(alertId);
+                            saveTodaysNotifiedSet(notifiedSet);
+                        }}
                     }}
                 }}
 
@@ -2470,7 +2508,7 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
                     document.getElementById('notification-panel').classList.remove('show');
                     goToTab('alerts');
                     setTimeout(() => {{
-                        const alertRow = document.querySelector(`#live-alerts-table .alert-row[data-stock='${{stock}}']`);
+                        const alertRow = document.querySelector(`#live-alerts-table .alert-row[data-stock='${{stockSymbol}}']`);
                         if (alertRow) {{
                             alertRow.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
                             alertRow.classList.add('highlight-row');
@@ -2577,7 +2615,7 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
 
                     notification.onclick = function(event) {{
                         event.preventDefault();
-                        window.open('http://localhost:8080', '_blank');
+                        window.open(window.location.href, '_blank');
                         notification.close();
                     }};
                 }}
@@ -2704,22 +2742,11 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
                     fetch('/api/alerts')
                         .then(res => res.json())
                         .then(alerts => {{
-                            const lastNotifiedTimestamp = localStorage.getItem('lastNotifiedTimestamp') || '';
-                            let latestTimestampThisBatch = lastNotifiedTimestamp;
-
+                            // This logic is now handled by the addNotification function's check
                             alerts.forEach(alert => {{
-                                if (alert.timestamp > lastNotifiedTimestamp) {{
-                                    const message = `${{alert.stock}} - ${{alert.action}} @ ₹${{alert.price.toFixed(2)}}`;
-                                    addNotification('alert', message, alert); // Pass the full alert object
-                                    if(alert.timestamp > latestTimestampThisBatch) {{
-                                        latestTimestampThisBatch = alert.timestamp;
-                                    }}
-                                }}
+                                const message = `${{alert.stock}} - ${{alert.action}} @ ₹${{alert.price.toFixed(2)}}`;
+                                addNotification('alert', message, alert);
                             }});
-                            
-                            if (latestTimestampThisBatch > lastNotifiedTimestamp) {{
-                                localStorage.setItem('lastNotifiedTimestamp', latestTimestampThisBatch);
-                            }}
 
                             const content = document.getElementById('alerts-content');
                             if (alerts.length === 0) {{
@@ -2758,6 +2785,8 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
                         }})
                         .catch(err => {{
                             console.error('Error loading alerts:', err);
+                            // BUG FIX: Show error message inside the tab content area
+                            document.getElementById('alerts-content').innerHTML = '<div class="no-data">Error: Failed to load live alert feed.</div>';
                             updateErrorIndicator({{
                                 data_fetch_error: true,
                                 error_message: 'Failed to load alerts'
