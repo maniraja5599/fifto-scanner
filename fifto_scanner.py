@@ -1694,12 +1694,15 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
                 
                 /* Responsive Design */
                 @media (max-width: 768px) {{
-                    .container {{ padding: 15px; }}
+                    .container {{ padding: 10px; }}
                     .header {{ padding: 20px; }}
                     .header h1 {{ font-size: 2.5em; }}
+                    .header .subtitle {{ font-size: 1em; }}
                     .controls {{ flex-direction: column; align-items: stretch; }}
-                    .stats-grid {{ grid-template-columns: 1fr; }}
+                    .right-controls {{ flex-wrap: wrap; justify-content: center; }}
+                    .stats-grid {{ grid-template-columns: 1fr; gap: 15px;}}
                     .tab-buttons {{ flex-direction: column; }}
+                    .tab-content {{ padding: 15px; }}
                     .table-controls {{ flex-direction: column; align-items: stretch; }}
                     .filter-input {{ width: 100%; }}
                     .floating-action-buttons {{
@@ -1718,24 +1721,12 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
                         max-width: none;
                         width: auto;
                     }}
-                }}
-                
-                /* Custom Scrollbar */
-                body::-webkit-scrollbar, .notification-panel::-webkit-scrollbar {{
-                    width: 8px;
-                }}
-                
-                body::-webkit-scrollbar-track, .notification-panel::-webkit-scrollbar-track {{
-                    background: var(--bg-color);
-                }}
-                
-                body::-webkit-scrollbar-thumb, .notification-panel::-webkit-scrollbar-thumb {{
-                    background: var(--border-color);
-                    border-radius: 4px;
-                }}
-                
-                body::-webkit-scrollbar-thumb:hover, .notification-panel::-webkit-scrollbar-thumb:hover {{
-                    background: var(--subtle-text-color);
+                    .zone-table {{
+                        display: block;
+                        width: 100%;
+                        overflow-x: auto;
+                        -webkit-overflow-scrolling: touch;
+                    }}
                 }}
             </style>
         </head>
@@ -2479,7 +2470,7 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
                     document.getElementById('notification-panel').classList.remove('show');
                     goToTab('alerts');
                     setTimeout(() => {{
-                        const alertRow = document.querySelector(`#live-alerts-table .alert-row[data-stock='${{stockSymbol}}']`);
+                        const alertRow = document.querySelector(`#live-alerts-table .alert-row[data-stock='${{stock}}']`);
                         if (alertRow) {{
                             alertRow.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
                             alertRow.classList.add('highlight-row');
