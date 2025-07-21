@@ -12,27 +12,9 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import urllib.parse
 
-# --- Configuration ---
-# MODIFIED: Read secrets from environment variables for security
-bot_token = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN")
-chat_id = os.environ.get("CHAT_ID", "YOUR_CHAT_ID")
-
-
-# Add this line back in
-DATA_DIR = "/var/data/fifto"
-
-# MODIFIED: Update all file paths to use the persistent DATA_DIR
-WATCHLIST_FILE = os.path.join(DATA_DIR, "watchlist.json")
-NIFTY_CACHE_FILE = os.path.join(DATA_DIR, "nifty_cache.json")
-HISTORICAL_DATA_FILE = os.path.join(DATA_DIR, "historical_scan_data.json")
-INTRADAY_ALERTS_FILE = os.path.join(DATA_DIR, "intraday_alerts_cache.json")
-FMI_NIFTY_CACHE_FILE = os.path.join(DATA_DIR, "fmi_nifty_cache.json")
-ALERT_FILE_TODAY = os.path.join(DATA_DIR, "today_alerts.json")
-NOTIFIED_STOCKS_FILE = os.path.join(DATA_DIR, "notified_stocks_today.txt")
-LAST_REPORT_FILE = os.path.join(DATA_DIR, "last_report_date.txt")
-SUPPLY_BROKEN_FILE = os.path.join(DATA_DIR, "weekly_supply_broken.xlsx")
-DEMAND_BROKEN_FILE = os.path.join(DATA_DIR, "weekly_demand_broken.xlsx")
-
+# Configuration
+bot_token = "7657983245:AAEx45-05EZOKANiaEnJV9M4V1zeKqaSgBM"
+chat_id = "-4913116305df"
 
 # Lot sizes embedded from fno_lot_sizes.csv
 lot_sizes = {
@@ -68,8 +50,8 @@ lot_sizes = {
     'SRF': 200, 'SUNPHARMA': 350, 'SUPREMEIND': 175, 'SYNGENE': 1000, 'TATACHEM': 650, 'TATACOMM': 350,
     'TATACONSUM': 550, 'TATAELXSI': 100, 'TATAMOTORS': 800, 'TATAPOWER': 1450, 'TATASTEEL': 5500, 'TATATECH': 800,
     'TCS': 175, 'TECHM': 600, 'TIINDIA': 200, 'TITAGARH': 725, 'TITAN': 175, 'TORNTPHARM': 250, 'TORNTPOWER': 375,
-    'TRENT': 100, 'TVSMOTOR': 350, 'ULTRACEMCO': 50, 'UNIONBANK': 4425, 'UNITDSPR': 400,
-    'UNOMINDA': 550, 'UPL': 1355, 'VBL': 1025, 'VEDL': 1150, 'VOLTAS': 375, 'WIPRO': 3000, 'YESBANK': 31100, 'ZYDUSLIFE': 900
+    'TRENT': 100, 'TVSMOTOR': 350, 'ULTRACEMCO': 50, 'UNIONBANK': 4425, 'UNITDSPR': 400, 'UNOMINDA': 550,
+    'UPL': 1355, 'VBL': 1025, 'VEDL': 1150, 'VOLTAS': 375, 'WIPRO': 3000, 'YESBANK': 31100, 'ZYDUSLIFE': 900
 }
 
 # --- Global variables ---
@@ -100,7 +82,7 @@ error_status = {
 FMI_DATA_PERIOD = "7d"
 FMI_DATA_INTERVAL = "30m"
 FMI_MOMENTUM_WINDOW = 10
-# FMI_NIFTY_CACHE_FILE is now defined at the top
+FMI_NIFTY_CACHE_FILE = "fmi_nifty_cache.json"
 
 def update_error_status(has_error, error_type="", message=""):
     """Update global error status for UI display"""
@@ -186,7 +168,7 @@ def run_fmi_scan():
             }
 
         print(f"\n✅ [{datetime.now().strftime('%I:%M:%S %p')}] FMI Calculation Complete. Long: {long_p:.2f}%, Short: {short_p:.2f}%")
-
+        
         # Clear any previous errors if successful
         update_error_status(False)
 
@@ -219,18 +201,18 @@ def update_fmi_data_periodically():
         try:
             current_time = time.time()
             time_elapsed = (current_time - last_scan_time) >= FMI_SCAN_INTERVAL
-
+            
             if time_elapsed:
                 # Check for Nifty price change before scanning
                 nifty = yf.Ticker("^NSEI")
                 current_nifty = nifty.history(period="1d", interval="1m")['Close'].iloc[-1]
-
+                
                 cache = load_fmi_nifty_cache()
                 last_nifty = cache.get("last_nifty")
 
                 # Trigger scan if Nifty price changed significantly or it's the first scan
                 nifty_changed = last_nifty is None or abs(current_nifty - last_nifty) > 0.01
-
+                
                 if nifty_changed:
                     print(f"   FMI Trigger: NIFTY price changed from {last_nifty} to {current_nifty}.")
                     run_fmi_scan()
@@ -247,8 +229,14 @@ def update_fmi_data_periodically():
         except Exception as e:
             print(f"❌ Error in FMI update loop: {e}")
             update_error_status(True, "internet", f"FMI update loop failed: {e}")
-
+        
         time.sleep(30) # Check every 30 seconds
+
+# Watchlist functionality
+WATCHLIST_FILE = "watchlist.json"
+NIFTY_CACHE_FILE = "nifty_cache.json"
+HISTORICAL_DATA_FILE = "historical_scan_data.json"
+INTRADAY_ALERTS_FILE = "intraday_alerts_cache.json"
 
 def load_nifty_cache():
     """Load cached NIFTY price data"""
@@ -407,8 +395,6 @@ def save_watchlist(watchlist):
         return False
 
 class ZoneScannerWebUI(BaseHTTPRequestHandler):
-    # ... (The entire ZoneScannerWebUI class remains unchanged)
-    # ... (I am omitting it here for brevity, but you should copy the whole class from your original file)
     def do_GET(self):
         if self.path == '/':
             self.serve_main_dashboard()
@@ -2253,7 +2239,7 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
 
                     notification.onclick = function(event) {{
                         event.preventDefault();
-                        window.open(window.location.origin, '_blank');
+                        window.open('http://localhost:8080', '_blank');
                         notification.close();
                     }};
                 }}
@@ -2518,8 +2504,8 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
         supply_zones, demand_zones = [], []
 
         try:
-            if os.path.exists(SUPPLY_BROKEN_FILE):
-                df_supply = pd.read_excel(SUPPLY_BROKEN_FILE)
+            if os.path.exists("weekly_supply_broken.xlsx"):
+                df_supply = pd.read_excel("weekly_supply_broken.xlsx")
                 if 'Time' in df_supply.columns and 'Lot Size' in df_supply.columns:
                     df_supply['Time'] = pd.to_datetime(df_supply['Time'], format='%Y-%m-%d %I:%M:%S %p', errors='coerce').dt.strftime('%I:%M:%S %p')
                     df_supply.sort_values(by='Time', ascending=False, inplace=True)
@@ -2533,8 +2519,8 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
             update_error_status(True, "data", f"Supply data read error: {e}")
 
         try:
-            if os.path.exists(DEMAND_BROKEN_FILE):
-                df_demand = pd.read_excel(DEMAND_BROKEN_FILE)
+            if os.path.exists("weekly_demand_broken.xlsx"):
+                df_demand = pd.read_excel("weekly_demand_broken.xlsx")
                 if 'Time' in df_demand.columns and 'Lot Size' in df_demand.columns:
                     df_demand['Time'] = pd.to_datetime(df_demand['Time'], format='%Y-%m-%d %I:%M:%S %p', errors='coerce').dt.strftime('%Y-%m-%d %I:%M:%S %p')
                     df_demand.sort_values(by='Time', ascending=False, inplace=True)
@@ -2578,9 +2564,9 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'application/json')
         self.end_headers()
         alerts = []
-        if os.path.exists(ALERT_FILE_TODAY):
+        if os.path.exists("today_alerts.json"):
             try:
-                with open(ALERT_FILE_TODAY, 'r') as f:
+                with open("today_alerts.json", 'r') as f:
                     alerts = json.load(f)
             except json.JSONDecodeError as e:
                 print(f"Error reading alerts file: {e}")
@@ -2589,11 +2575,12 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
 
 def start_web_server():
     try:
-        # OnRender provides the PORT environment variable.
+        # MODIFIED FOR RENDER: Get port from environment variable, default to 8080 for local use
         port = int(os.environ.get('PORT', 8080))
         server_address = ('0.0.0.0', port)
         server = HTTPServer(server_address, ZoneScannerWebUI)
-        print(f"🌐 Web UI server started on port {port}. Access it via your OnRender URL.")
+        # MODIFIED FOR RENDER: Use the dynamic URL
+        print(f"🌐 Web UI server started. Access it at https://fifto-scanner.onrender.com")
         server.serve_forever()
     except Exception as e:
         print(f"❌ Server could not start: {e}")
@@ -2606,14 +2593,15 @@ def save_alert_to_json(stock, price, zone_low, zone_high, zone_type, action):
         'zone_high': zone_high, 'type': zone_type, 'action': action,
         'lot_size': lot_size
     }
+    alert_file = "today_alerts.json"
     alerts = []
-    if not os.path.exists(ALERT_FILE_TODAY) or datetime.fromtimestamp(os.path.getmtime(ALERT_FILE_TODAY)).date() != datetime.now().date():
-         with open(ALERT_FILE_TODAY, 'w') as f: json.dump([], f)
+    if not os.path.exists(alert_file) or datetime.fromtimestamp(os.path.getmtime(alert_file)).date() != datetime.now().date():
+         with open(alert_file, 'w') as f: json.dump([], f)
     try:
-        with open(ALERT_FILE_TODAY, 'r') as f: alerts = json.load(f)
+        with open(alert_file, 'r') as f: alerts = json.load(f)
     except (json.JSONDecodeError, FileNotFoundError): pass
     alerts.append(alert)
-    with open(ALERT_FILE_TODAY, 'w') as f: json.dump(alerts, f, indent=2)
+    with open(alert_file, 'w') as f: json.dump(alerts, f, indent=2)
 
 def send_telegram_message(message):
     try:
@@ -2642,14 +2630,15 @@ def send_telegram_message(message):
 def send_daily_telegram_report():
     """Reads today's alerts and sends a consolidated report to Telegram."""
     today_str = datetime.now().strftime('%d-%b-%Y')
+    alert_file = "today_alerts.json"
 
-    if not os.path.exists(ALERT_FILE_TODAY):
+    if not os.path.exists(alert_file):
         message = f"<b>FiFTO Daily Report: {today_str}</b>\n\nNo alerts were generated today."
         send_telegram_message(message)
         return
 
     try:
-        with open(ALERT_FILE_TODAY, 'r') as f:
+        with open(alert_file, 'r') as f:
             alerts = json.load(f)
 
         if not alerts:
@@ -2683,21 +2672,22 @@ def send_daily_telegram_report():
 
 def send_zone_alert(title, data, zone_type):
     today_str = datetime.now().strftime('%Y-%m-%d')
+    memory_file = "notified_stocks_today.txt"
     notified_today = set()
 
-    if os.path.exists(NOTIFIED_STOCKS_FILE):
+    if os.path.exists(memory_file):
         try:
-            with open(NOTIFIED_STOCKS_FILE, 'r') as f:
+            with open(memory_file, 'r') as f:
                 lines = f.read().splitlines()
                 if lines and lines[0] == today_str:
                     notified_today.update(lines[1:])
                 else:
-                    with open(NOTIFIED_STOCKS_FILE, 'w') as f_write: f_write.write(today_str + '\n')
+                    with open(memory_file, 'w') as f_write: f_write.write(today_str + '\n')
         except Exception as e:
             print(f"Error reading notification memory file: {e}")
-            with open(NOTIFIED_STOCKS_FILE, 'w') as f_write: f_write.write(today_str + '\n')
+            with open(memory_file, 'w') as f_write: f_write.write(today_str + '\n')
     else:
-        with open(NOTIFIED_STOCKS_FILE, 'w') as f_write: f_write.write(today_str + '\n')
+        with open(memory_file, 'w') as f_write: f_write.write(today_str + '\n')
 
     for x in data:
         stock = x['Stock']
@@ -2741,13 +2731,11 @@ def send_zone_alert(title, data, zone_type):
         print(f"🚨 {alert_type} Alert: {stock} @ ₹{price:.2f} | Lot: {lot_size} | {zone_status}")
 
         try:
-            with open(NOTIFIED_STOCKS_FILE, 'a') as f_append: f_append.write(stock + '\n')
+            with open(memory_file, 'a') as f_append: f_append.write(stock + '\n')
             notified_today.add(stock)
         except Exception as e:
             print(f"Error writing to notification memory file: {e}")
-            
-# ... (The rest of the functions like fno_stocks, fetch_historical_data, etc., remain unchanged)
-# ... (I am omitting them here for brevity, but you should copy them from your original file)
+
 fno_stocks = ['360ONE', 'ABB', 'ACC', 'APLAPOLLO', 'AUBANK', 'AARTIIND', 'ADANIENSOL', 'ADANIENT', 'ADANIGREEN', 'ADANIPORTS', 'ATGL', 'ABCAPITAL', 'ABFRL', 'ALKEM', 'AMBER', 'AMBUJACEM', 'ANGELONE', 'APOLLOHOSP', 'ASHOKLEY', 'ASIANPAINT', 'ASTRAL', 'AUROPHARMA', 'DMART', 'AXISBANK', 'BSOFT', 'BSE', 'BAJAJ-AUTO', 'BAJFINANCE', 'BAJAJFINSV', 'BALKRISIND', 'BANDHANBNK', 'BANKBARODA', 'BANKINDIA', 'BDL', 'BEL', 'BHARATFORG', 'BHEL', 'BPCL', 'BHARTIARTL', 'BIOCON', 'BLUESTARCO', 'BOSCHLTD', 'BRITANNIA', 'CESC', 'CGPOWER', 'CANBK', 'CDSL', 'CHAMBLFERT', 'CHOLAFIN', 'CIPLA', 'COALINDIA', 'COFORGE', 'COLPAL', 'CAMS', 'CONCOR', 'CROMPTON', 'CUMMINSIND', 'CYIENT', 'DLF', 'DABUR', 'DALBHARAT', 'DELHIVERY', 'DIVISLAB', 'DIXON', 'DRREDDY', 'EICHERMOT', 'EXIDEIND', 'NYKAA', 'FORTIS', 'GAIL', 'GMRAIRPORT', 'GLENMARK', 'GODREJCP', 'GODREJPROP', 'GRANULES', 'GRASIM', 'HCLTECH', 'HDFCAMC', 'HDFCBANK', 'HDFCLIFE', 'HFCL', 'HAVELLS', 'HEROMOTOCO', 'HINDALCO', 'HAL', 'HINDCOPPER', 'HINDPETRO', 'HINDUNILVR', 'HINDZINC', 'HUDCO', 'ICICIBANK', 'ICICIGI', 'ICICIPRULI', 'IDFCFIRSTB', 'IIFL', 'IRB', 'ITC', 'INDIANB', 'IEX', 'IOC', 'IRCTC', 'IRFC', 'IREDA', 'IGL', 'INDUSTOWER', 'INDUSINDBK', 'NAUKRI', 'INFY', 'INOXWIND', 'INDIGO', 'JSWENERGY', 'JSWSTEEL', 'JSL', 'JINDALSTEL', 'JIOFIN', 'JUBLFOOD', 'KEI', 'KPITTECH', 'KALYANKJIL', 'KAYNES', 'KFINTECH', 'KOTAKBANK', 'LTF', 'LICHSGFIN', 'LTIM', 'LT', 'LAURUSLABS', 'LICI', 'LUPIN', 'LODHA', 'MGL', 'M&MFIN', 'M&M', 'MANAPPURAM', 'MANKIND', 'MARICO', 'MARUTI', 'MFSL', 'MAXHEALTH', 'MAZDOCK', 'MPHASIS', 'MCX', 'MUTHOOTFIN', 'NBCC', 'NCC', 'NHPC', 'NMDC', 'NTPC', 'NATIONALUM', 'NESTLEIND', 'OBEROIRLTY', 'ONGC', 'PAYTM', 'OFSS', 'POLICYBZR', 'PGEL', 'PIIND', 'PNBHOUSING', 'PAGEIND', 'PATANJALI', 'PERSISTENT', 'PETRONET', 'PIDILITIND', 'PEL', 'PPLPHARMA', 'POLYCAB', 'POONAWALLA', 'PFC', 'POWERGRID', 'PRESTIGE', 'PNB', 'RBLBANK', 'RECLTD', 'RVNL', 'RELIANCE', 'SBICARD', 'SBILIFE', 'SHREECEM', 'SJVN', 'SRF', 'MOTHERSON', 'SHRIRAMFIN', 'SIEMENS', 'SOLARINDS', 'SONACOMS', 'SBIN', 'SAIL', 'SUNPHARMA', 'SUPREMEIND', 'SYNGENE', 'TATACONSUM', 'TITAGARH', 'TVSMOTOR', 'TATACHEM', 'TATACOMM', 'TCS', 'TATAELXSI', 'TATAMOTORS', 'TATAPOWER', 'TATASTEEL', 'TATATECH', 'TECHM', 'FEDERALBNK', 'INDHOTEL', 'PHOENIXLTD', 'TITAN', 'TORNTPHARM', 'TORNTPOWER', 'TRENT', 'TIINDIA', 'UNOMINDA', 'UPL', 'ULTRACEMCO', 'UNIONBANK', 'UNITDSPR', 'VBL', 'VEDL', 'IDEA', 'VOLTAS', 'WIPRO', 'YESBANK', 'ZYDUSLIFE']
 
 def fetch_historical_data(stock, period="3mo", interval="1d"):
@@ -2852,26 +2840,25 @@ def run_zone_scan(scan_type="AUTO"):
 
         try:
             if all_supply_broken:
-                pd.DataFrame(all_supply_broken).to_excel(SUPPLY_BROKEN_FILE, index=False)
+                pd.DataFrame(all_supply_broken).to_excel("weekly_supply_broken.xlsx", index=False)
                 send_zone_alert("Supply Broken", all_supply_broken, "Supply")
-            elif os.path.exists(SUPPLY_BROKEN_FILE): os.remove(SUPPLY_BROKEN_FILE)
+            elif os.path.exists("weekly_supply_broken.xlsx"): os.remove("weekly_supply_broken.xlsx")
         except Exception as e:
-            print(f"❌ ERROR writing to {SUPPLY_BROKEN_FILE}. It might be open. {e}")
+            print(f"❌ ERROR writing to weekly_supply_broken.xlsx. It might be open. {e}")
 
         try:
             if all_demand_broken:
-                pd.DataFrame(all_demand_broken).to_excel(DEMAND_BROKEN_FILE, index=False)
+                pd.DataFrame(all_demand_broken).to_excel("weekly_demand_broken.xlsx", index=False)
                 send_zone_alert("Demand Broken", all_demand_broken, "Demand")
-            elif os.path.exists(DEMAND_BROKEN_FILE): os.remove(DEMAND_BROKEN_FILE)
+            elif os.path.exists("weekly_demand_broken.xlsx"): os.remove("weekly_demand_broken.xlsx")
         except Exception as e:
-            print(f"❌ ERROR writing to {DEMAND_BROKEN_FILE}. It might be open. {e}")
+            print(f"❌ ERROR writing to weekly_demand_broken.xlsx. It might be open. {e}")
             
         update_error_status(False)
         
     except Exception as e:
         print(f"❌ Zone scan error: {e}")
         update_error_status(True, "data", f"Zone scan failed: {e}")
-
 
 def main():
     print("🚀 FiFTO Scanner Initialized")
@@ -2886,9 +2873,9 @@ def main():
 
     server_thread = threading.Thread(target=start_web_server, daemon=True)
     server_thread.start()
+    time.sleep(2)
     
-    # MODIFIED: Removed webbrowser.open() as it's not applicable on a server
-    # time.sleep(2)
+    # MODIFIED FOR RENDER: Removed webbrowser.open()
     # try:
     #     webbrowser.open('http://localhost:8080')
     # except Exception as e:
@@ -2897,8 +2884,9 @@ def main():
     print("📊 Running initial zone scan...")
     run_zone_scan(scan_type='INITIAL')
     print("\n✅ FiFTO Scanner is running!")
-    print("   -> Access your dashboard via the OnRender URL.")
-    print("\nCheck the logs on the OnRender dashboard for status updates.")
+    # MODIFIED FOR RENDER: Use the dynamic URL
+    print("   -> Web Dashboard: https://fifto-scanner.onrender.com")
+    print("\nPress Ctrl+C to stop the scanner.")
 
     time_since_last_scan = 0
     try:
@@ -2915,23 +2903,24 @@ def main():
                 time_since_last_scan = 0
 
             report_time = now.replace(hour=16, minute=0, second=0, microsecond=0)
-            
+            last_report_file = "last_report_date.txt"
+
             last_sent_date_str = ""
-            if os.path.exists(LAST_REPORT_FILE):
-                with open(LAST_REPORT_FILE, 'r') as f:
+            if os.path.exists(last_report_file):
+                with open(last_report_file, 'r') as f:
                     last_sent_date_str = f.read().strip()
 
             if now >= report_time and last_sent_date_str != now.strftime('%Y-%m-%d'):
                 print(f"🕒 [{now.strftime('%I:%M:%S %p')}] Time to send daily report...")
                 send_daily_telegram_report()
-                with open(LAST_REPORT_FILE, 'w') as f:
+                with open(last_report_file, 'w') as f:
                     f.write(now.strftime('%Y-%m-%d'))
                 print("✅ Daily report sent. Will not send again today.")
 
             time.sleep(1)
 
     except KeyboardInterrupt:
-        print("\n👋 FiFTO Scanner stopped.")
+        print("\n👋 FiFTO Scanner stopped by user.")
 
 if __name__ == "__main__":
     main()
