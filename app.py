@@ -17,6 +17,10 @@ import urllib.parse
 bot_token = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN")
 chat_id = os.environ.get("CHAT_ID", "YOUR_CHAT_ID")
 
+
+# Add this line back in
+DATA_DIR = "/var/data/fifto"
+
 # MODIFIED: Update all file paths to use the persistent DATA_DIR
 WATCHLIST_FILE = os.path.join(DATA_DIR, "watchlist.json")
 NIFTY_CACHE_FILE = os.path.join(DATA_DIR, "nifty_cache.json")
