@@ -325,8 +325,6 @@ def save_watchlist(watchlist):
         return False
 
 class ZoneScannerWebUI(BaseHTTPRequestHandler):
-    # This class does not need changes and can be copied as is.
-    # The HTML/JS inside serve_main_dashboard is also correct.
     def do_GET(self):
         if self.path == '/':
             self.serve_main_dashboard()
@@ -501,9 +499,1907 @@ class ZoneScannerWebUI(BaseHTTPRequestHandler):
         fno_options_html = ''.join([f'<option value="{stock}">' for stock in fno_stocks])
         html_content = fr"""
         <!DOCTYPE html>
-        """ # NOTE: The HTML is very long and has not been changed. It's omitted here for brevity.
-        # For the user, I will include the full HTML as requested in the final code block.
-        # This is just a placeholder for my thought process.
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>FiFTO Dashboard</title>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+                
+                :root {{
+                    --bg-color: #02040a;
+                    --card-color: rgba(26, 27, 35, 0.85);
+                    --text-color: #e8eaf0;
+                    --subtle-text-color: #9ca3af;
+                    --border-color: #2d3748;
+                    --shadow-color: rgba(0,0,0,0.3);
+                    --green-color: #10b981;
+                    --red-color: #ef4444;
+                    --blue-color: #3b82f6;
+                    --blue-glow: rgba(59, 130, 246, 0.5);
+                    --red-glow: rgba(239, 68, 68, 0.5);
+                    --purple-color: #8b5cf6;
+                    --orange-color: #f59e0b;
+                    --hover-color: #252730;
+                    --header-gradient: linear-gradient(135deg, rgba(102, 126, 234, 0.5) 0%, rgba(118, 75, 162, 0.5) 100%);
+                    --error-color: #dc2626;
+                    --warning-color: #f59e0b;
+                    --highlight-color: rgba(255, 215, 0, 0.15);
+                }}
+                
+                body.light-theme {{
+                    --bg-color: #f8fafc;
+                    --card-color: #ffffff;
+                    --text-color: #1e293b;
+                    --subtle-text-color: #64748b;
+                    --border-color: #e2e8f0;
+                    --shadow-color: rgba(0, 0, 0, 0.1);
+                    --hover-color: #f1f5f9;
+                    --header-gradient: linear-gradient(125deg, #31418b 0%, #752895 100%);
+                    --highlight-color: rgba(255, 215, 0, 0.25);
+                }}
+                
+                * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+                
+                body {{
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background: var(--bg-color);
+                    color: var(--text-color);
+                    transition: all 0.3s ease;
+                    min-height: 100vh;
+                }}
+                
+                /* Animated Background */
+                .background-dots {{
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: -1;
+                    overflow: hidden;
+                }}
+
+                .dot {{
+                    position: absolute;
+                    background-color: rgba(139, 92, 246, 0.3);
+                    border-radius: 50%;
+                    animation: animateDots 20s linear infinite;
+                }}
+
+                @keyframes animateDots {{
+                    0% {{
+                        transform: translateY(100vh) scale(1);
+                        opacity: 1;
+                    }}
+                    100% {{
+                        transform: translateY(-10vh) scale(0);
+                        opacity: 0;
+                    }}
+                }}
+                
+                .container {{ 
+                    max-width: 1400px; 
+                    margin: 0 auto; 
+                    padding: 20px; 
+                }}
+                
+                /* Enhanced Header with Background and Animation */
+                .header {{
+                    background: var(--header-gradient);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    padding: 30px 40px;
+                    border-radius: 20px;
+                    margin-bottom: 25px;
+                    text-align: center;
+                    position: relative;
+                    overflow: hidden;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+                }}
+                
+                .header h1 {{
+                    margin-bottom: 10px;
+                    font-size: 4em;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-family: 'Orbitron', monospace;
+                    font-weight: 900;
+                    position: relative;
+                    z-index: 1;
+                    
+                    color: #ADFF2F; /* Lime Green */
+                    text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
+                }}
+                
+                /* Candlestick Animation */
+                .candlestick-icon {{
+                    margin-right: 15px;
+                    display: inline-block;
+                    animation: candlestickPulse 2s ease-in-out infinite;
+                }}
+                
+                @keyframes candlestickPulse {{
+                    0%, 100% {{ transform: scale(1); opacity: 1; }}
+                    50% {{ transform: scale(1.1); opacity: 0.8; }}
+                }}
+                
+                .header .subtitle {{ 
+                    color: rgba(255,255,255,0.9); 
+                    font-size: 1.3em; 
+                    margin-top: 5px; 
+                    font-weight: 500;
+                    position: relative;
+                    z-index: 1;
+                }}
+                
+                .error-indicator {{
+                    position: fixed;
+                    bottom: 25px;
+                    right: 25px;
+                    background: var(--error-color);
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+                    z-index: 1000;
+                    display: none;
+                    animation: slideInRight 0.3s ease;
+                    max-width: 300px;
+                    word-wrap: break-word;
+                }}
+                
+                .error-indicator.internet {{
+                    background: var(--warning-color);
+                }}
+                
+                .error-indicator.show {{
+                    display: block;
+                }}
+                
+                @keyframes slideInRight {{
+                    from {{ transform: translateX(100%); opacity: 0; }}
+                    to {{ transform: translateX(0); opacity: 1; }}
+                }}
+                
+                .controls {{
+                    background: var(--card-color);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    padding: 20px 25px;
+                    border-radius: 15px;
+                    margin-bottom: 25px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 20px;
+                    box-shadow: 0 4px 6px var(--shadow-color);
+                }}
+                
+                .left-controls {{ display: flex; align-items: center; gap: 15px; }}
+                .right-controls {{ display: flex; align-items: center; gap: 20px; color: var(--subtle-text-color); }}
+                
+                #live-clock-container {{ 
+                    font-weight: 600; 
+                    font-size: 1.1em; 
+                    background: var(--header-gradient);
+                    color: white;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                }}
+                
+                .control-group {{ display: flex; align-items: center; gap: 10px; }}
+                
+                #scan-interval, #scan-mode {{
+                    background: var(--bg-color);
+                    color: var(--text-color);
+                    border: 1px solid var(--border-color);
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    font-weight: 500;
+                    transition: all 0.2s ease;
+                }}
+                
+                #scan-interval:focus, #scan-mode:focus {{
+                    outline: none;
+                    border-color: var(--blue-color);
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                }}
+                
+                .btn {{
+                    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-size: 1em;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                    text-decoration: none;
+                    display: inline-block;
+                    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+                }}
+                
+                .btn:hover {{ 
+                    transform: translateY(-2px); 
+                    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+                }}
+                
+                .btn.success {{ 
+                    background: linear-gradient(135deg, var(--green-color), #059669);
+                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+                }}
+                
+                .btn.success:hover {{
+                    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+                }}
+                
+                .btn:disabled {{
+                    background: #6b7280;
+                    cursor: not-allowed;
+                    transform: none;
+                    opacity: 0.6;
+                    box-shadow: none;
+                }}
+                
+                .btn.small {{ padding: 8px 16px; font-size: 0.9em; }}
+                
+                .btn.icon-btn {{
+                    padding: 0;
+                    width: 44px;
+                    height: 44px;
+                    font-size: 1.5em;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }}
+                
+                .fmi-section, .stat-card, .tabs {{
+                    background: var(--card-color);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    padding: 25px;
+                    border-radius: 15px;
+                    margin-bottom: 25px;
+                    box-shadow: 0 4px 6px var(--shadow-color);
+                }}
+                
+                .fmi-header {{ 
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center; 
+                    margin-bottom: 20px; 
+                }}
+                
+                .fmi-header h2 {{ 
+                    font-weight: 700; 
+                    margin: 0; 
+                    font-size: 1.4em;
+                    color: var(--text-color);
+                }}
+
+                .fmi-bar-container {{
+                    padding: 20px 0;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 15px;
+                }}
+                .fmi-bar-labels {{
+                    width: 100%;
+                    max-width: 500px;
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 1.1em;
+                    font-weight: 700;
+                    font-family: 'Orbitron', monospace;
+                }}
+                .fmi-bar-labels .short-label {{ color: var(--red-color); }}
+                .fmi-bar-labels .long-label {{ color: var(--green-color); }}
+
+                .fmi-bar {{
+                    width: 100%;
+                    max-width: 500px;
+                    height: 25px;
+                    display: flex;
+                    background: var(--hover-color);
+                    border-radius: 25px;
+                    overflow: hidden;
+                    border: 1px solid var(--border-color);
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+                }}
+                .fmi-short-segment, .fmi-long-segment {{
+                    height: 100%;
+                    transition: width 0.8s ease-in-out;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: 700;
+                    font-size: 0.9em;
+                }}
+                .fmi-short-segment {{
+                    background: linear-gradient(90deg, #b91c1c, var(--red-color));
+                    border-radius: 25px 0 0 25px;
+                }}
+                .fmi-long-segment {{
+                    background: linear-gradient(90deg, var(--green-color), #047857);
+                    border-radius: 0 25px 25px 0;
+                }}
+                
+                .fmi-details {{ 
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center; 
+                    font-size: 0.95em; 
+                    padding: 15px 8px 0;
+                    width: 100%;
+                    border-top: 1px solid var(--border-color);
+                }}
+                
+                .nifty-sentiment {{ 
+                    font-family: 'Orbitron', monospace; 
+                    font-weight: 700; 
+                    font-size: 1.3em; 
+                    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+                    padding: 6px 12px;
+                    border-radius: 8px;
+                    transition: all 0.3s ease;
+                }}
+                
+                .nifty-sentiment.bullish {{ 
+                    color: #fff;
+                    background-color: var(--green-color);
+                    box-shadow: 0 0 10px var(--green-color);
+                }}
+                .nifty-sentiment.bearish {{ 
+                    color: #fff;
+                    background-color: var(--red-color);
+                    box-shadow: 0 0 10px var(--red-color);
+                }}
+                .nifty-sentiment.neutral {{ 
+                    color: var(--text-color);
+                    background-color: var(--border-color);
+                }}
+                
+                .fmi-last-update {{ 
+                    font-size: 0.85em; 
+                    color: var(--subtle-text-color); 
+                    font-weight: 500;
+                }}
+
+                .stats-grid {{ 
+                    display: grid; 
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+                    gap: 25px; 
+                    margin-bottom: 25px; 
+                }}
+                
+                .stat-card {{
+                    padding: 30px;
+                    text-align: center;
+                    transition: all 0.3s ease;
+                }}
+                
+                .stat-card.clickable {{ cursor: pointer; }}
+                
+                .stat-card.clickable:hover {{ 
+                    transform: translateY(-8px) scale(1.02); 
+                    box-shadow: 0 12px 25px var(--shadow-color); 
+                }}
+                
+                .stat-card .number {{ 
+                    font-size: 2.2em; 
+                    font-weight: 800; 
+                    margin-bottom: 12px; 
+                    font-family: 'Orbitron', monospace;
+                }}
+                
+                .nifty-change {{
+                    font-size: 1.1em;
+                    font-weight: 600;
+                    margin-bottom: 8px;
+                    font-family: 'Inter', sans-serif;
+                }}
+                
+                .nifty-change.positive {{ color: var(--green-color); }}
+                .nifty-change.negative {{ color: var(--red-color); }}
+                .nifty-change.neutral {{ color: var(--subtle-text-color); }}
+                .stat-card .label {{ 
+                    color: var(--subtle-text-color); 
+                    font-size: 1.1em; 
+                    text-transform: uppercase; 
+                    letter-spacing: 1.5px; 
+                    font-weight: 600;
+                }}
+                
+                .stat-card.supply .number {{ color: var(--green-color); }}
+                .stat-card.demand .number {{ color: var(--red-color); }}
+                .stat-card.nifty .number {{ color: var(--purple-color); }}
+                .stat-card.watchlist .number {{ color: var(--orange-color); }}
+                
+                .tabs {{ 
+                    overflow: hidden; 
+                }}
+                
+                .tab-buttons {{ 
+                    display: flex; 
+                    background: var(--hover-color); 
+                }}
+                
+                .tab-btn {{ 
+                    flex: 1; 
+                    padding: 18px 24px; 
+                    border: none; 
+                    background: transparent; 
+                    color: var(--subtle-text-color); 
+                    cursor: pointer; 
+                    font-size: 1.1em; 
+                    font-weight: 600; 
+                    transition: all 0.3s ease; 
+                    border-bottom: 3px solid transparent; 
+                }}
+                
+                .tab-btn:hover {{
+                    background: rgba(255,255,255,0.05);
+                    color: var(--text-color);
+                }}
+                
+                .tab-btn.active {{ 
+                    color: var(--text-color); 
+                    background: var(--card-color);
+                }}
+                
+                .tab-btn.active.supply {{ border-bottom-color: var(--green-color); }}
+                .tab-btn.active.demand {{ border-bottom-color: var(--red-color); }}
+                .tab-btn.active.alerts {{ border-bottom-color: var(--blue-color); }}
+                .tab-btn.active.watchlist {{ border-bottom-color: var(--orange-color); }}
+                
+                .tab-content {{
+                    padding: 25px;
+                }}
+                
+                .table-controls {{ 
+                    position: relative; 
+                    margin-bottom: 20px; 
+                    display: flex; 
+                    gap: 20px; 
+                    align-items: center; 
+                    flex-wrap: wrap;
+                }}
+                
+                .filter-input {{
+                    padding: 12px 20px;
+                    border-radius: 25px;
+                    border: 1px solid var(--border-color);
+                    background: var(--bg-color);
+                    color: var(--text-color);
+                    width: 320px;
+                    font-size: 1em;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }}
+                
+                .filter-input:focus {{
+                    outline: none;
+                    border-color: var(--blue-color);
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+                }}
+                
+                .watchlist-controls {{
+                    display: flex;
+                    gap: 12px;
+                    align-items: center;
+                }}
+                
+                .watchlist-input {{
+                    padding: 10px 16px;
+                    border-radius: 8px;
+                    border: 1px solid var(--border-color);
+                    background: var(--bg-color);
+                    color: var(--text-color);
+                    width: 220px;
+                    font-size: 0.95em;
+                    transition: all 0.2s ease;
+                }}
+                
+                .watchlist-input:focus {{
+                    outline: none;
+                    border-color: var(--blue-color);
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                }}
+                
+                .zone-table {{ 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin-top: 10px;
+                    background: transparent;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 2px 8px var(--shadow-color);
+                }}
+                
+                .zone-table th, .zone-table td {{ 
+                    padding: 16px 12px; 
+                    border-bottom: 1px solid var(--border-color); 
+                    text-align: center; 
+                    vertical-align: middle; 
+                }}
+                
+                .zone-table th {{ 
+                    background: var(--hover-color); 
+                    font-weight: 700; 
+                    color: var(--text-color); 
+                    cursor: pointer; 
+                    user-select: none; 
+                    position: relative; 
+                    font-size: 0.95em;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }}
+                
+                .zone-table td {{ 
+                    cursor: pointer; 
+                    color: var(--text-color); 
+                    transition: all 0.2s ease;
+                }}
+                
+                .zone-table tr:hover td {{ 
+                    background: var(--hover-color); 
+                    transform: scale(1.01);
+                }}
+                
+                .zone-table th:hover {{ 
+                    background: var(--border-color); 
+                }}
+                
+                .zone-table th.sort-asc::after, .zone-table th.sort-desc::after {{ 
+                    position: absolute; 
+                    right: 8px; 
+                    top: 50%; 
+                    transform: translateY(-50%); 
+                    font-size: 0.8em;
+                }}
+                
+                .zone-table th.sort-asc::after {{ content: '▲'; }}
+                .zone-table th.sort-desc::after {{ content: '▼'; }}
+                
+                .zone-table td:first-child, .zone-table th:first-child {{ text-align: left; }}
+                
+                .zone-table a {{ 
+                    text-decoration: none; 
+                    color: var(--text-color); 
+                    font-weight: 600; 
+                    transition: color 0.2s; 
+                }}
+                
+                .zone-table a:hover {{ color: var(--blue-color); }}
+                
+                .supply-indicator {{ 
+                    background: linear-gradient(135deg, var(--green-color), #059669); 
+                    color: white; 
+                    padding: 6px 12px; 
+                    border-radius: 15px; 
+                    font-size: 0.85em; 
+                    font-weight: 700; 
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+                }}
+                
+                .demand-indicator {{ 
+                    background: linear-gradient(135deg, var(--red-color), #dc2626); 
+                    color: white; 
+                    padding: 6px 12px; 
+                    border-radius: 15px; 
+                    font-size: 0.85em; 
+                    font-weight: 700; 
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+                }}
+                
+                .remove-btn {{ 
+                    background: linear-gradient(135deg, var(--red-color), #dc2626); 
+                    color: white; 
+                    border: none; 
+                    padding: 6px 12px; 
+                    border-radius: 6px; 
+                    cursor: pointer; 
+                    font-size: 0.85em; 
+                    font-weight: 600;
+                    transition: all 0.2s ease;
+                }}
+                
+                .remove-btn:hover {{ 
+                    background: linear-gradient(135deg, #dc2626, #b91c1c);
+                    transform: translateY(-1px);
+                }}
+                
+                .lot-size-highlight {{
+                    background: linear-gradient(135deg, #f59e0b, #d97706);
+                    color: white;
+                    padding: 8px 14px;
+                    border-radius: 10px;
+                    font-weight: 700;
+                    font-size: 1em;
+                    display: inline-block;
+                    min-width: 50px;
+                    text-align: center;
+                    box-shadow: 0 3px 6px rgba(245, 158, 11, 0.3);
+                    border: 1px solid rgba(255,255,255,0.2);
+                }}
+                
+                .time-highlight {{
+                    background: linear-gradient(135deg, var(--blue-color), #1e40af);
+                    color: white;
+                    padding: 6px 12px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    font-size: 0.9em;
+                    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+                    border: 1px solid rgba(255,255,255,0.2);
+                }}
+                
+                .alerts-container {{
+                    max-height: 70vh;
+                    overflow-y: auto;
+                    padding-right: 10px;
+                }}
+
+                .alert-row.highlight-row td {{
+                    background-color: var(--highlight-color) !important;
+                    transition: background-color 0.5s ease;
+                }}
+                
+                .filter-buttons {{
+                    display: flex;
+                    gap: 12px;
+                    margin-bottom: 20px;
+                    flex-wrap: wrap;
+                }}
+                
+                .filter-btn {{
+                    padding: 10px 18px;
+                    border: 1px solid var(--border-color);
+                    background: var(--card-color);
+                    color: var(--text-color);
+                    border-radius: 25px;
+                    cursor: pointer;
+                    font-size: 0.9em;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }}
+                
+                .filter-btn:hover {{ 
+                    background: var(--hover-color); 
+                    transform: translateY(-2px); 
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                }}
+                
+                .filter-btn.active {{ 
+                    background: linear-gradient(135deg, var(--blue-color), #1e40af); 
+                    color: white; 
+                    border-color: var(--blue-color); 
+                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                }}
+                
+                .no-data {{ 
+                    text-align: center; 
+                    padding: 50px; 
+                    color: var(--subtle-text-color); 
+                    font-size: 1.2em; 
+                    font-weight: 500;
+                }}
+                
+                .floating-action-buttons {{
+                    position: fixed;
+                    top: 25px;
+                    right: 25px;
+                    display: flex;
+                    gap: 15px;
+                    z-index: 1000;
+                }}
+                .floating-action-buttons .btn {{
+                    border-radius: 50%;
+                    width: 56px;
+                    height: 56px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-size: 1.5em;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                }}
+                
+                #theme-toggle {{
+                    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+                    color: white !important;
+                    border: none !important;
+                    transition: all 0.3s ease;
+                }}
+                
+                #theme-toggle:hover {{
+                    background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+                    transform: scale(1.1);
+                    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
+                }}
+
+                .notification-container {{
+                    position: relative;
+                }}
+                
+                .notification-bell {{
+                    background: transparent !important;
+                    color: var(--green-color) !important;
+                    border: 3px solid var(--green-color) !important;
+                    transition: all 0.3s ease;
+                    position: relative;
+                    overflow: visible;
+                }}
+                
+                .notification-bell.error-alert {{
+                    color: var(--red-color) !important;
+                    border-color: var(--red-color) !important;
+                    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+                    animation: pulse-red 2s infinite;
+                }}
+                
+                .notification-bell.new-notification {{
+                    animation: bellGlowBorder 1.5s ease-in-out infinite;
+                }}
+                
+                @keyframes bellGlowBorder {{
+                    0%, 100% {{ 
+                        transform: scale(1);
+                        border-color: var(--green-color);
+                        box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+                    }}
+                    50% {{ 
+                        transform: scale(1.15);
+                        border-color: #22d3ee;
+                        box-shadow: 0 0 25px rgba(16, 185, 129, 0.7), 0 0 40px rgba(34, 211, 238, 0.4);
+                    }}
+                }}
+                
+                .notification-bell:hover {{
+                    background: var(--green-color) !important;
+                    color: white !important;
+                    transform: scale(1.1);
+                    box-shadow: 0 0 20px rgba(16, 185, 129, 0.6) !important;
+                }}
+
+                .notification-panel {{
+                    position: absolute;
+                    top: 110%;
+                    right: 0;
+                    width: 350px;
+                    max-height: 400px;
+                    overflow-y: auto;
+                    background: var(--card-color);
+                    border: 1px solid var(--border-color);
+                    border-radius: 10px;
+                    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+                    z-index: 1001;
+                    display: none;
+                }}
+                .notification-panel.show {{
+                    display: block;
+                }}
+                .notification-item {{
+                    padding: 12px 15px;
+                    border-bottom: 1px solid var(--border-color);
+                    display: flex;
+                    gap: 10px;
+                    align-items: start;
+                    cursor: pointer;
+                    transition: background-color 0.2s ease;
+                }}
+                .notification-item:hover {{
+                    background-color: var(--hover-color);
+                }}
+                .notification-item:last-child {{
+                    border-bottom: none;
+                }}
+                .notification-item .icon {{
+                    font-size: 1.2em;
+                    margin-top: 2px;
+                }}
+                .notification-item .content .message {{
+                    font-weight: 500;
+                }}
+                .notification-item .content .time {{
+                    font-size: 0.8em;
+                    color: var(--subtle-text-color);
+                    margin-top: 4px;
+                }}
+                
+                .live-popup-alert {{
+                    position: fixed;
+                    bottom: 25px;
+                    left: 25px;
+                    background: var(--card-color);
+                    color: var(--text-color);
+                    padding: 20px 25px;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    z-index: 1002;
+                    width: 100%;
+                    max-width: 480px;
+                    transform: translateX(-120%);
+                    transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+                    border: 1px solid var(--border-color);
+                    border-left: 5px solid var(--blue-color);
+                    backdrop-filter: blur(15px);
+                    -webkit-backdrop-filter: blur(15px);
+                }}
+                
+                .live-popup-alert.show {{
+                    transform: translateX(0);
+                }}
+                
+                .live-popup-alert.supply {{ border-left-color: var(--green-color); }}
+                .live-popup-alert.demand {{ border-left-color: var(--red-color); }}
+                
+                .popup-alert-header {{
+                    font-weight: 700;
+                    font-size: 1.2em;
+                    margin-bottom: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }}
+                
+                .popup-alert-content {{
+                    font-size: 1em;
+                    line-height: 1.5;
+                }}
+                
+                .popup-alert-stock {{
+                    font-weight: 700;
+                    font-size: 1.1em;
+                    color: var(--blue-color);
+                    text-decoration: none;
+                    cursor: pointer;
+                }}
+                
+                .live-popup-alert.supply .popup-alert-stock {{ color: var(--green-color); }}
+                .live-popup-alert.demand .popup-alert-stock {{ color: var(--red-color); }}
+
+                .popup-progress-bar {{
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    height: 4px;
+                    background: var(--blue-color);
+                    border-radius: 0 0 0 12px;
+                    animation: progressBarShrink 7s linear;
+                }}
+                .live-popup-alert.supply .popup-progress-bar {{ background: var(--green-color); }}
+                .live-popup-alert.demand .popup-progress-bar {{ background: var(--red-color); }}
+                
+                @keyframes progressBarShrink {{
+                    from {{ width: 100%; }}
+                    to {{ width: 0%; }}
+                }}
+                
+                @media (max-width: 768px) {{
+                    .container {{ padding: 15px; }}
+                    .header {{ padding: 20px; }}
+                    .header h1 {{ font-size: 2.5em; }}
+                    .controls {{ flex-direction: column; align-items: stretch; }}
+                    .stats-grid {{ grid-template-columns: 1fr; }}
+                    .tab-buttons {{ flex-direction: column; }}
+                    .table-controls {{ flex-direction: column; align-items: stretch; }}
+                    .filter-input {{ width: 100%; }}
+                    .floating-action-buttons {{
+                        top: 15px;
+                        right: 15px;
+                        flex-direction: column;
+                    }}
+                    .live-popup-alert {{
+                        bottom: 15px;
+                        left: 15px;
+                        right: 15px;
+                        max-width: none;
+                        width: auto;
+                    }}
+                }}
+                
+                /* Custom Scrollbar */
+                body::-webkit-scrollbar, .notification-panel::-webkit-scrollbar, .alerts-container::-webkit-scrollbar {{
+                    width: 8px;
+                }}
+                
+                body::-webkit-scrollbar-track, .notification-panel::-webkit-scrollbar-track, .alerts-container::-webkit-scrollbar-track {{
+                    background: var(--bg-color);
+                }}
+                
+                body::-webkit-scrollbar-thumb, .notification-panel::-webkit-scrollbar-thumb, .alerts-container::-webkit-scrollbar-thumb {{
+                    background: var(--border-color);
+                    border-radius: 4px;
+                }}
+                
+                body::-webkit-scrollbar-thumb:hover, .notification-panel::-webkit-scrollbar-thumb:hover, .alerts-container::-webkit-scrollbar-thumb:hover {{
+                    background: var(--subtle-text-color);
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="background-dots"></div>
+            <div id="error-indicator" class="error-indicator">
+                <span id="error-message"></span>
+            </div>
+            
+            <div class="container">
+                <div class="header">
+                    <h1>
+                        <div class="candlestick-icon">
+                            <svg width="60" height="60" viewBox="0 0 24 24" style="filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));">
+                                <rect x="5" y="10" width="4" height="8" rx="1" fill="#10b981"></rect>
+                                <line x1="7" y1="4" x2="7" y2="20" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"></line>
+                                <rect x="15" y="6" width="4" height="8" rx="1" fill="#ef4444"></rect>
+                                <line x1="17" y1="4" x2="17" y2="20" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"></line>
+                            </svg>
+                        </div>
+                        FiFTO
+                    </h1>
+                    <div class="subtitle">Enhanced F&O Analytics with Watchlist & Real-time Reporting</div>
+                </div>
+                
+                <div class="controls">
+                    <div class="left-controls">
+                        <button class="btn success" id="run-scan-btn" onclick="runNewScan()">🔄 Run New Scan</button>
+                        <button class="btn" onclick="refreshData()">📊 Refresh Data</button>
+                    </div>
+                    <div class="right-controls">
+                        <div class="control-group">
+                            <label for="scan-interval">Zone Scan:</label>
+                            <select id="scan-interval" onchange="setScanInterval()">
+                                <option value="60">1 Min</option>
+                                <option value="120">2 Mins</option>
+                                <option value="300">5 Mins</option>
+                                <option value="600">10 Mins</option>
+                                <option value="0">Off</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="scan-mode">Scan Mode:</label>
+                            <select id="scan-mode" onchange="setScanMode()">
+                                <option value="Intraday">Intraday</option>
+                                <option value="2 Days">Full Scan</option>
+                            </select>
+                        </div>
+                        <span id="live-clock-container">⏰ <span id="live-clock"></span></span>
+                        <span id="lastUpdate"></span>
+                    </div>
+                </div>
+
+                <div class="fmi-section">
+                    <div class="fmi-header">
+                        <h2>Fund Momentum Indicator (F&O Stocks)</h2>
+                        <button class="btn small" id="fmi-refresh-btn" onclick="triggerFmiRefresh()">🔄 Refresh Now</button>
+                    </div>
+                    <div class="fmi-bar-container">
+                        <div class="fmi-bar-labels">
+                            <span class="short-label">Short</span>
+                            <span class="long-label">Long</span>
+                        </div>
+                        <div class="fmi-bar">
+                            <div id="fmi-short-segment" class="fmi-short-segment"></div>
+                            <div id="fmi-long-segment" class="fmi-long-segment"></div>
+                        </div>
+                    </div>
+                    <div class="fmi-details">
+                        <div>Nifty Sentiment: <span id="nifty-sentiment-label" class="nifty-sentiment neutral">Initializing...</span></div>
+                        <div id="fmi-last-update" class="fmi-last-update"></div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card nifty">
+                        <div class="number" id="niftyPrice">-</div>
+                        <div class="nifty-change" id="niftyChange">-</div>
+                        <div class="label">NIFTY Current</div>
+                    </div>
+                    <div class="stat-card supply clickable" onclick="goToTab('supply')">
+                        <div class="number" id="supplyBreaks">-</div>
+                        <div class="label">Supply Breakouts</div>
+                    </div>
+                    <div class="stat-card demand clickable" onclick="goToTab('demand')">
+                        <div class="number" id="demandBreaks">-</div>
+                        <div class="label">Demand Breakdowns</div>
+                    </div>
+                    <div class="stat-card watchlist clickable" onclick="goToTab('watchlist')">
+                        <div class="number" id="watchlistCount">-</div>
+                        <div class="label">Watchlist Stocks</div>
+                    </div>
+                </div>
+                
+                <div class="tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active alerts" onclick="showTab('alerts', this)">🚨 Live Alerts</button>
+                        <button class="tab-btn supply" onclick="showTab('supply', this)">🟢 Supply Zones</button>
+                        <button class="tab-btn demand" onclick="showTab('demand', this)">🔴 Demand Zones</button>
+                        <button class="tab-btn watchlist" onclick="showTab('watchlist', this)">⭐ Watchlist</button>
+                    </div>
+                    <div class="tab-content">
+                        <div id="alerts-tab" class="tab-panel">
+                             <h3>Live Alert Feed</h3>
+                             <div class="table-controls">
+                                 <input type="text" id="alerts-filter" class="filter-input" onkeyup="filterAlerts()" placeholder="Search alerts by stock name...">
+                                 <div class="filter-buttons">
+                                     <button class="filter-btn active" id="alert-filter-all" onclick="filterAlertsByType('all', this)">All Alerts</button>
+                                     <button class="filter-btn" id="alert-filter-supply" onclick="filterAlertsByType('supply', this)">Supply Only</button>
+                                     <button class="filter-btn" id="alert-filter-demand" onclick="filterAlertsByType('demand', this)">Demand Only</button>
+                                     <button class="filter-btn" onclick="filterAlertsByWatchlist(this)">⭐ Watchlist Only</button>
+                                 </div>
+                             </div>
+                             <div class="alerts-container">
+                                 <div id="alerts-content"><div class="no-data">Loading...</div></div>
+                             </div>
+                        </div>
+                        <div id="supply-tab" class="tab-panel" style="display: none;">
+                            <h3>Supply Zone Breakouts</h3>
+                            <div id="supply-content"><div class="no-data">Loading...</div></div>
+                        </div>
+                        <div id="demand-tab" class="tab-panel" style="display: none;">
+                            <h3>Demand Zone Breakdowns</h3>
+                            <div id="demand-content"><div class="no-data">Loading...</div></div>
+                        </div>
+                        <div id="watchlist-tab" class="tab-panel" style="display: none;">
+                             <h3>Your Watchlist</h3>
+                             <div class="table-controls">
+                                 <input type="text" id="watchlist-filter" class="filter-input" onkeyup="filterTable('watchlist-filter', 'watchlist-table')" placeholder="Filter watchlist stocks...">
+                                 <div class="watchlist-controls">
+                                     <input type="text" id="add-stock-input" class="watchlist-input" placeholder="Enter or select stock" list="fno-stocks-list" onkeypress="handleAddStockEnter(event)">
+                                     <datalist id="fno-stocks-list">{fno_options_html}</datalist>
+                                     <button class="btn small" onclick="addToWatchlist()">➕ Add Stock</button>
+                                 </div>
+                             </div>
+                             <div id="watchlist-content"><div class="no-data">Loading...</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="floating-action-buttons">
+                <div class="notification-container">
+                    <button id="notification-bell" class="btn icon-btn notification-bell" title="Notifications">
+                        🔔
+                    </button>
+                    <div id="notification-panel" class="notification-panel">
+                        </div>
+                </div>
+                <button id="theme-toggle" class="btn" title="Toggle Theme">🌙</button>
+            </div>
+
+            <script>
+                let notifications = [];
+                let lastErrorMessage = "";
+                let currentTab = 'alerts';
+
+                // **MODIFIED**: New browser notification icon based on the user's image.
+                const logoDataUri = 'data:image/svg+xml;base64,' + btoa(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24">
+                        <path fill="#10b981" d="M4,18h3v-5H4v5z M9,12h3v-5H9v5z M14,6h3V3h-3V6z M1,16l6-6.5l4,4.5l7.5-8L21,8.5l-9.5,9.5l-4-4.5l-5,5.5V16z"/>
+                    </svg>
+                `);
+
+                function updateErrorIndicator(errorData) {{
+                    const indicator = document.getElementById('error-indicator');
+                    const message = document.getElementById('error-message');
+                    const bellIcon = document.getElementById('notification-bell');
+                    
+                    if (errorData.data_fetch_error || errorData.internet_error) {{
+                        const errorType = errorData.internet_error ? 'internet' : 'data';
+                        const icon = errorType === 'internet' ? '🌐' : '📊';
+                        
+                        indicator.className = `error-indicator ${{errorType}} show`;
+                        message.textContent = `${{icon}} ${{errorData.error_message || 'Connection issue detected'}}`;
+                        
+                        bellIcon.classList.add('error-alert');
+                        
+                        if (errorData.error_message && errorData.error_message !== lastErrorMessage) {{
+                            addNotification('error', errorData.error_message);
+                            lastErrorMessage = errorData.error_message;
+                        }}
+
+                    }} else {{
+                        indicator.classList.remove('show');
+                        bellIcon.classList.remove('error-alert');
+                        lastErrorMessage = "";
+                    }}
+                }}
+
+                function checkErrorStatus() {{
+                    fetch('/api/error-status')
+                        .then(res => res.json())
+                        .then(data => updateErrorIndicator(data))
+                        .catch(err => {{
+                            console.error('Error checking status:', err);
+                            const msg = 'Failed to check system status. Possible connection loss.';
+                            if (msg !== lastErrorMessage) {{
+                                addNotification('error', msg);
+                                lastErrorMessage = msg;
+                            }}
+                            updateErrorIndicator({{ internet_error: true, error_message: 'Failed to check system status' }});
+                        }});
+                }}
+
+                function formatDateTime(isoString) {{
+                    if (!isoString) return '--:--:--';
+                    const date = new Date(isoString);
+                    const options = {{ 
+                        year: '2-digit', 
+                        month: '2-digit', 
+                        day: '2-digit', 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        second: '2-digit',
+                        hour12: true 
+                    }};
+                    return date.toLocaleString('en-IN', options).replace(',', '');
+                }}
+
+                function formatTime(isoString) {{
+                    if (!isoString) return '--:--:--';
+                    const date = new Date(isoString);
+                    const options = {{ 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        second: '2-digit', 
+                        hour12: true 
+                    }};
+                    return date.toLocaleTimeString('en-US', options);
+                }}
+
+                const themeToggleBtn = document.getElementById('theme-toggle');
+
+                function applyTheme(theme) {{
+                    if (theme === 'light') {{
+                        document.body.classList.add('light-theme');
+                        themeToggleBtn.innerHTML = '🌙';
+                    }} else {{
+                        document.body.classList.remove('light-theme');
+                        themeToggleBtn.innerHTML = '☀️';
+                    }}
+                }}
+
+                function toggleTheme() {{
+                    const newTheme = document.body.classList.contains('light-theme') ? 'dark' : 'light';
+                    localStorage.setItem('theme', newTheme);
+                    applyTheme(newTheme);
+                }}
+
+                function updateClock() {{
+                    const clockElement = document.getElementById('live-clock');
+                    if(clockElement) {{
+                        clockElement.textContent = formatTime(new Date().toISOString());
+                    }}
+                }}
+
+                function setScanInterval() {{
+                    const intervalSeconds = document.getElementById('scan-interval').value;
+                    localStorage.setItem('scanInterval', intervalSeconds);
+                    fetch('/api/set-interval', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ interval: parseInt(intervalSeconds) }})
+                    }})
+                    .then(res => res.json())
+                    .then(data => console.log(data.message))
+                    .catch(err => console.error('Error setting scan interval:', err));
+                }}
+
+                function triggerFmiRefresh() {{
+                    const btn = document.getElementById('fmi-refresh-btn');
+                    btn.disabled = true;
+                    btn.textContent = 'Refreshing...';
+                    
+                    fetch('/api/fmi/refresh')
+                        .then(res => res.json())
+                        .then(data => {{
+                            console.log(data.message);
+                            setTimeout(() => {{
+                                loadFmiData();
+                                btn.disabled = false;
+                                btn.innerHTML = '🔄 Refresh Now';
+                            }}, 5000);
+                        }})
+                        .catch(err => {{
+                            console.error('Error triggering FMI refresh:', err);
+                            btn.disabled = false;
+                            btn.innerHTML = '🔄 Refresh Now';
+                        }});
+                }}
+
+                function setScanMode() {{
+                    const mode = document.getElementById('scan-mode').value;
+                    localStorage.setItem('scanMode', mode);
+                    fetch('/api/set-mode', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ mode: mode }})
+                    }})
+                    .then(res => res.json())
+                    .then(data => console.log(data.message))
+                    .catch(err => console.error('Error setting scan mode:', err));
+                }}
+
+                let currentWatchlist = [];
+                let currentAlertFilter = 'all';
+
+                function filterAlerts() {{
+                    const searchTerm = document.getElementById('alerts-filter').value.toLowerCase();
+                    const table = document.getElementById('live-alerts-table');
+                    if (!table) return;
+                    const rows = table.getElementsByTagName("tbody")[0].rows;
+                    for (const row of rows) {{
+                        const stockName = row.cells[1].textContent.toLowerCase();
+                        const matchesSearch = stockName.includes(searchTerm);
+                        const matchesFilter = checkAlertFilter(row);
+                        row.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+                    }}
+                }}
+
+                function checkAlertFilter(rowElement) {{
+                    if (currentAlertFilter === 'all') return true;
+                    if (currentAlertFilter === 'supply') return rowElement.classList.contains('supply');
+                    if (currentAlertFilter === 'demand') return rowElement.classList.contains('demand');
+                    if (currentAlertFilter === 'watchlist') {{
+                        const stockName = rowElement.dataset.stock;
+                        return currentWatchlist.includes(stockName);
+                    }}
+                    return true;
+                }}
+
+                function filterAlertsByType(type, buttonElement) {{
+                    currentAlertFilter = type;
+                    document.querySelectorAll('#alerts-tab .filter-btn').forEach(btn => btn.classList.remove('active'));
+                    buttonElement.classList.add('active');
+                    filterAlerts();
+                }}
+
+                function filterAlertsByWatchlist(buttonElement) {{
+                    currentAlertFilter = 'watchlist';
+                    document.querySelectorAll('#alerts-tab .filter-btn').forEach(btn => btn.classList.remove('active'));
+                    buttonElement.classList.add('active');
+
+                    fetch('/api/watchlist')
+                        .then(res => res.json())
+                        .then(data => {{
+                            currentWatchlist = data.map(item => item.stock);
+                            filterAlerts();
+                        }})
+                        .catch(err => console.error('Error loading watchlist for filter:', err));
+                }}
+
+                function filterTable(inputId, tableId) {{
+                    const filter = document.getElementById(inputId).value.toUpperCase();
+                    const table = document.getElementById(tableId);
+                    if (!table) return;
+                    const rows = table.getElementsByTagName("tbody")[0].rows;
+
+                    for (const row of rows) {{
+                         if (row.hasAttribute('data-hidden-by-watchlist')) {{
+                            continue;
+                        }}
+                        const matchesSearch = row.textContent.toUpperCase().includes(filter);
+                        row.style.display = matchesSearch ? "" : "none";
+                    }}
+                }}
+                
+                function toggleWatchlistFilter(button, tableId) {{
+                    button.classList.toggle('active');
+                    const isActive = button.classList.contains('active');
+
+                    fetch('/api/watchlist')
+                        .then(res => res.json())
+                        .then(watchlistData => {{
+                            const watchlistStocks = watchlistData.map(item => item.stock);
+                            const table = document.getElementById(tableId);
+                            if (!table) return;
+                            const rows = table.getElementsByTagName("tbody")[0].rows;
+                            
+                            for (const row of rows) {{
+                                const stockName = row.dataset.stock;
+                                if (isActive) {{
+                                    if (!watchlistStocks.includes(stockName)) {{
+                                        row.style.display = 'none';
+                                        row.setAttribute('data-hidden-by-watchlist', 'true');
+                                    }}
+                                }} else {{
+                                    row.removeAttribute('data-hidden-by-watchlist');
+                                    row.style.display = '';
+                                }}
+                            }}
+                            const filterInputId = tableId.replace('-table', '-filter');
+                            if (document.getElementById(filterInputId)) {{
+                                filterTable(filterInputId, tableId);
+                            }}
+                        }})
+                        .catch(err => console.error('Error loading watchlist for filter:', err));
+                }}
+
+                function addToWatchlist() {{
+                    const stockInput = document.getElementById('add-stock-input');
+                    const stock = stockInput.value.trim().toUpperCase();
+                    if (!stock) return alert('Please enter a stock symbol');
+
+                    fetch('/api/watchlist/add', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ stock: stock }})
+                    }})
+                    .then(res => res.json())
+                    .then(data => {{
+                        if (data.success) {{
+                            stockInput.value = '';
+                            loadWatchlist();
+                            updateWatchlistCount();
+                        }} else {{
+                            alert('Failed to add stock: ' + (data.message || 'Unknown error'));
+                        }}
+                    }})
+                    .catch(err => alert('Error adding stock to watchlist'));
+                }}
+
+                function removeFromWatchlist(stock) {{
+                    if (!confirm(`Remove ${{stock}} from watchlist?`)) return;
+                    fetch('/api/watchlist/remove', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ stock: stock }})
+                    }})
+                    .then(res => res.json())
+                    .then(data => {{
+                        if (data.success) {{
+                            loadWatchlist();
+                            updateWatchlistCount();
+                        }} else {{
+                            alert('Failed to remove stock: ' + (data.message || 'Unknown error'));
+                        }}
+                    }})
+                    .catch(err => alert('Error removing stock from watchlist'));
+                }}
+
+                function handleAddStockEnter(event) {{
+                    if (event.key === 'Enter') addToWatchlist();
+                }}
+
+                function loadWatchlist() {{
+                    fetch('/api/watchlist')
+                        .then(res => res.json())
+                        .then(data => {{
+                            const content = document.getElementById('watchlist-content');
+                            if (data.length === 0) {{
+                                content.innerHTML = '<div class="no-data">No stocks in watchlist. Add some using the input above.</div>';
+                                return;
+                            }}
+
+                            let tableHTML = `<table class="zone-table" id="watchlist-table">
+                                <thead><tr>
+                                    <th onclick="sortTable(this, 0)">Stock</th>
+                                    <th onclick="sortTable(this, 1)">Current Price</th>
+                                    <th onclick="sortTable(this, 2)">Lot Size</th>
+                                    <th>Action</th>
+                                </tr></thead><tbody>`;
+
+                            data.forEach(item => {{
+                                const tradingViewUrl = `https://www.tradingview.com/chart/?symbol=NSE:${{item.stock}}`;
+                                tableHTML += `<tr>
+                                    <td><strong><a href="${{tradingViewUrl}}" target="_blank">${{item.stock}}</a></strong></td>
+                                    <td>₹${{item.price.toFixed(2)}}</td>
+                                    <td><span class="lot-size-highlight">${{item.lot_size}}</span></td>
+                                    <td><button class="remove-btn" onclick="removeFromWatchlist('${{item.stock}}')">Remove</button></td>
+                                </tr>`;
+                            }});
+                            content.innerHTML = tableHTML + '</tbody></table>';
+                        }})
+                        .catch(err => {{
+                            console.error('Error loading watchlist:', err);
+                            document.getElementById('watchlist-content').innerHTML = '<div class="no-data">Error loading watchlist</div>';
+                        }});
+                }}
+
+                function updateWatchlistCount() {{
+                    fetch('/api/watchlist')
+                        .then(res => res.json())
+                        .then(data => {{
+                            currentWatchlist = data.map(item => item.stock);
+                            document.getElementById('watchlistCount').textContent = data.length;
+                        }})
+                        .catch(err => console.error('Error updating watchlist count:', err));
+                }}
+
+                function loadFmiData() {{
+                    fetch('/api/fmi')
+                        .then(res => res.json())
+                        .then(data => {{
+                            const shortSegment = document.getElementById('fmi-short-segment');
+                            const longSegment = document.getElementById('fmi-long-segment');
+                            const niftyLabel = document.getElementById('nifty-sentiment-label');
+                            const lastUpdateElem = document.getElementById('fmi-last-update');
+
+                            const longPct = data.long_pct || 0;
+                            const shortPct = data.short_pct || 0;
+                            
+                            shortSegment.style.width = `${{shortPct}}%`;
+                            longSegment.style.width = `${{longPct}}%`;
+                            
+                            shortSegment.textContent = `${{shortPct.toFixed(1)}}%`;
+                            longSegment.textContent = `${{longPct.toFixed(1)}}%`;
+                            
+                            niftyLabel.textContent = data.nifty_signal;
+                            niftyLabel.className = 'nifty-sentiment ' + data.nifty_signal.toLowerCase();
+
+                            if (data.last_update) {{
+                                lastUpdateElem.textContent = `Last FMI Update: ${{formatTime(data.last_update)}}`;
+                            }}
+                        }})
+                        .catch(err => console.error('Error loading FMI data:', err));
+                }}
+
+                function createDots() {{
+                    const container = document.querySelector('.background-dots');
+                    if (!container) return;
+                    const numDots = 30;
+                    for (let i = 0; i < numDots; i++) {{
+                        const dot = document.createElement('div');
+                        dot.classList.add('dot');
+                        const size = Math.random() * 5 + 1;
+                        dot.style.width = `${{size}}px`;
+                        dot.style.height = `${{size}}px`;
+                        dot.style.left = `${{Math.random() * 100}}%`;
+                        dot.style.bottom = '0px';
+                        const duration = Math.random() * 15 + 10;
+                        dot.style.animationDuration = `${{duration}}s`;
+                        const delay = Math.random() * 5;
+                        dot.style.animationDelay = `${{delay}}s`;
+                        container.appendChild(dot);
+                    }}
+                }}
+                
+                let hasUnreadNotifications = false;
+
+                function addNotification(type, message, alertObject = null) {{
+                    const now = new Date();
+                    const newNotification = {{
+                        type: type,
+                        message: message,
+                        stock: alertObject ? alertObject.stock : null,
+                        time: now.toISOString(),
+                        read: false
+                    }};
+                    notifications.unshift(newNotification);
+                    if (notifications.length > 50) {{
+                        notifications.pop();
+                    }}
+                    
+                    hasUnreadNotifications = true;
+                    document.getElementById('notification-bell').classList.add('new-notification');
+                    
+                    if (type === 'alert' && alertObject) {{
+                        showLivePopupAlert(alertObject);
+                        showWebNotification(alertObject);
+                    }}
+                }}
+
+                function showLivePopupAlert(alert) {{
+                    const existingPopup = document.querySelector('.live-popup-alert');
+                    if (existingPopup) {{
+                        existingPopup.remove();
+                    }}
+
+                    const popup = document.createElement('div');
+                    const isSupply = alert.type.toLowerCase().includes('supply');
+                    const actionText = alert.action || (isSupply ? 'BREAKOUT' : 'BREAKDOWN');
+                    
+                    popup.className = `live-popup-alert ${{isSupply ? 'supply' : 'demand'}}`;
+                    
+                    const icon = isSupply ? '🟢' : '🔴';
+                    
+                    popup.innerHTML = `
+                        <div class="popup-alert-header">
+                            ${{icon}} ${{actionText}} ALERT
+                        </div>
+                        <div class="popup-alert-content">
+                            <span class="popup-alert-stock" onclick="handlePopupStockClick('${{alert.stock}}')">${{alert.stock}}</span>
+                            <div>
+                                Price: ₹${{alert.price.toFixed(2)}} | Lot: ${{alert.lot_size}}
+                            </div>
+                        </div>
+                        <div class="popup-progress-bar"></div>
+                    `;
+
+                    document.body.appendChild(popup);
+                    setTimeout(() => popup.classList.add('show'), 100);
+                    setTimeout(() => {{
+                        popup.classList.remove('show');
+                        setTimeout(() => popup.remove(), 600);
+                    }}, 7000);
+                }}
+
+                function handlePopupStockClick(stockSymbol) {{
+                    const popup = document.querySelector('.live-popup-alert');
+                    if (popup) {{
+                        popup.classList.remove('show');
+                        setTimeout(() => popup.remove(), 500);
+                    }}
+                    handleNotificationClick(stockSymbol);
+                }}
+
+                function handleNotificationClick(stockSymbol) {{
+                    if (!stockSymbol) return;
+                    document.getElementById('notification-panel').classList.remove('show');
+                    goToTab('alerts');
+                    setTimeout(() => {{
+                        const alertRow = document.querySelector(`#live-alerts-table .alert-row[data-stock='${{stockSymbol}}']`);
+                        if (alertRow) {{
+                            alertRow.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                            alertRow.classList.add('highlight-row');
+                            setTimeout(() => {{
+                                alertRow.classList.remove('highlight-row');
+                            }}, 3000);
+                        }}
+                    }}, 200);
+                }}
+
+                function renderNotifications() {{
+                    const panel = document.getElementById('notification-panel');
+                    if (notifications.length === 0) {{
+                        panel.innerHTML = '<div class="no-data" style="padding: 20px;">No notifications yet.</div>';
+                        return;
+                    }}
+                    
+                    let html = '';
+                    notifications.forEach(n => {{
+                        const icon = n.type === 'alert' ? '⚡️' : '⚠️';
+                        const timeStr = formatTime(n.time);
+                        const clickHandler = n.stock ? `onclick="handleNotificationClick('${{n.stock}}')"` : '';
+                        
+                        html += `
+                            <div class="notification-item" ${{clickHandler}} data-stock="${{n.stock || ''}}">
+                                <div class="icon">${{icon}}</div>
+                                <div class="content">
+                                    <div class="message">${{n.message}}</div>
+                                    <div class="time">${{timeStr}}</div>
+                                </div>
+                            </div>
+                        `;
+                    }});
+                    panel.innerHTML = html;
+                }}
+
+                function markNotificationsAsRead() {{
+                    notifications.forEach(n => n.read = true);
+                    hasUnreadNotifications = false;
+                    document.getElementById('notification-bell').classList.remove('new-notification');
+                }}
+
+                document.addEventListener('DOMContentLoaded', () => {{
+                    const notificationBell = document.getElementById('notification-bell');
+                    const notificationPanel = document.getElementById('notification-panel');
+
+                    themeToggleBtn.addEventListener('click', toggleTheme);
+                    applyTheme(localStorage.getItem('theme') || 'dark');
+                    
+                    createDots();
+
+                    notificationBell.addEventListener('click', (event) => {{
+                        event.stopPropagation();
+                        notificationPanel.classList.toggle('show');
+                        if (notificationPanel.classList.contains('show')) {{
+                            markNotificationsAsRead();
+                            renderNotifications();
+                        }}
+                    }});
+
+                    document.addEventListener('click', (event) => {{
+                        if (!notificationPanel.contains(event.target) && !notificationBell.contains(event.target)) {{
+                            notificationPanel.classList.remove('show');
+                        }}
+                    }});
+
+                    document.getElementById('scan-interval').value = localStorage.getItem('scanInterval') || '60';
+                    document.getElementById('scan-mode').value = localStorage.getItem('scanMode') || 'Intraday';
+                    
+                    updateClock();
+                    setInterval(updateClock, 1000);
+
+                    requestNotificationPermission();
+                    loadAllData();
+                    loadFmiData();
+                    loadWatchlist();
+                    updateWatchlistCount();
+                    startAutoRefresh();
+                    loadAlerts();
+                    
+                    setInterval(checkErrorStatus, 10000);
+                }});
+
+                function requestNotificationPermission() {{ if ('Notification' in window) Notification.requestPermission(); }}
+
+                function showWebNotification(alert) {{
+                    if (Notification.permission !== "granted") return;
+                    const title = `${{alert.stock}} - ${{alert.action}}`;
+                    const options = {{
+                        body: `Price: ₹${{alert.price.toFixed(2)}} | Lot Size: ${{alert.lot_size || 'N/A'}}`,
+                        icon: logoDataUri, 
+                        badge: logoDataUri,
+                        tag: `fifto-alert-${{alert.stock}}`,
+                        renotify: true
+                    }};
+                    
+                    const notification = new Notification(title, options);
+
+                    notification.onclick = function(event) {{
+                        event.preventDefault();
+                        window.open('https://fifto-scanner.onrender.com', '_blank');
+                        notification.close();
+                    }};
+                }}
+
+                function showTab(tabName, element) {{
+                    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.getElementById(`${{tabName}}-tab`).style.display = 'block';
+                    element.classList.add('active');
+                    currentTab = tabName;
+                    if (tabName === 'watchlist') loadWatchlist();
+                }}
+
+                function goToTab(tabName, filterType = null) {{
+                    const tabButton = document.querySelector(`.tab-btn.${{tabName}}`);
+                    if (tabButton) {{
+                        tabButton.click();
+                        const tabsContainer = document.querySelector('.tabs');
+                        if (tabsContainer) {{
+                            tabsContainer.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                        }}
+                        if (filterType) {{
+                            setTimeout(() => {{
+                                const filterButton = document.getElementById(`alert-filter-${{filterType}}`);
+                                if (filterButton) filterButton.click();
+                            }}, 100);
+                        }}
+                    }}
+                }}
+
+                function loadAllData() {{
+                    fetch('/api/zones')
+                        .then(res => res.json())
+                        .then(data => {{
+                            updateStats(data);
+                            document.getElementById('supply-content').innerHTML = createTableHTML(data.supply_zones || [], 'supply');
+                            document.getElementById('demand-content').innerHTML = createTableHTML(data.demand_zones || [], 'demand');
+                            updateLastUpdate(data.last_update);
+                        }})
+                        .catch(err => {{
+                            console.error('Error loading data:', err);
+                            updateErrorIndicator({{
+                                data_fetch_error: true,
+                                error_message: 'Failed to load zone data'
+                            }});
+                        }});
+                }}
+
+                function updateStats(data) {{
+                    document.getElementById('supplyBreaks').textContent = (data.supply_zones || []).length;
+                    document.getElementById('demandBreaks').textContent = (data.demand_zones || []).length;
+                    document.getElementById('niftyPrice').textContent = data.nifty_price || '-';
+                    
+                    const niftyChangeElement = document.getElementById('niftyChange');
+                    if (data.nifty_change !== undefined && data.nifty_change_percent !== undefined) {{
+                        const changePoints = data.nifty_change > 0 ? `+${{data.nifty_change.toFixed(2)}}` : data.nifty_change.toFixed(2);
+                        const changePercent = data.nifty_change_percent > 0 ? `+${{data.nifty_change_percent.toFixed(2)}}%` : `${{data.nifty_change_percent.toFixed(2)}}%`;
+                        
+                        niftyChangeElement.textContent = `${{changePoints}} (${{changePercent}})`;
+                        
+                        niftyChangeElement.className = 'nifty-change';
+                        if (data.nifty_change > 0) {{
+                            niftyChangeElement.classList.add('positive');
+                        }} else if (data.nifty_change < 0) {{
+                            niftyChangeElement.classList.add('negative');
+                        }} else {{
+                            niftyChangeElement.classList.add('neutral');
+                        }}
+                    }} else {{
+                        niftyChangeElement.textContent = '-';
+                        niftyChangeElement.className = 'nifty-change neutral';
+                    }}
+                }}
+
+                function createTableHTML(zones, type) {{
+                    if (zones.length === 0) return `<div class="no-data">No ${{type}} zone events detected.</div>`;
+                    const tableId = `${{type}}-table`;
+                    const isSupply = type === 'supply';
+
+                    let tableHTML = `<div class="table-controls">
+                            <input type="text" id="${{type}}-filter" class="filter-input" onkeyup="filterTable('${{type}}-filter', '${{tableId}}')" placeholder="Search by stock...">
+                            <button class="filter-btn" onclick="toggleWatchlistFilter(this, '${{tableId}}')">⭐ Watchlist Only</button>
+                        </div>`;
+
+                    tableHTML += `<table class="zone-table" id="${{tableId}}"><thead><tr>
+                        <th onclick="sortTable(this, 0)">Stock</th>
+                        <th onclick="sortTable(this, 1)">Price</th>
+                        <th onclick="sortTable(this, 2)">Zone Low</th>
+                        <th onclick="sortTable(this, 3)">Zone High</th>
+                        <th onclick="sortTable(this, 4)">${{isSupply ? 'Breakout %' : 'Breakdown %'}}</th>
+                        <th onclick="sortTable(this, 5)">Lot Size</th>
+                        <th onclick="sortTable(this, 6)">Status</th>
+                        <th onclick="sortTable(this, 7)">Time</th>
+                        </tr></thead><tbody>`;
+
+                    zones.forEach(zone => {{
+                        const tradingViewUrl = `https://www.tradingview.com/chart/?symbol=NSE:${{zone.stock}}`;
+                        const percent = isSupply ? (((zone.price - zone.zone_high) / zone.zone_high) * 100).toFixed(2) : (((zone.zone_low - zone.price) / zone.zone_low) * 100).toFixed(2);
+                        const statusText = isSupply ? 'BREAKOUT' : 'BREAKDOWN';
+                        const statusClass = isSupply ? 'supply-indicator' : 'demand-indicator';
+
+                        tableHTML += `<tr data-stock="${{zone.stock}}">
+                            <td><strong><a href="${{tradingViewUrl}}" target="_blank">${{zone.stock}}</a></strong></td>
+                            <td>₹${{zone.price.toFixed(2)}}</td>
+                            <td>₹${{zone.zone_low.toFixed(2)}}</td>
+                            <td>₹${{zone.zone_high.toFixed(2)}}</td>
+                            <td>${{percent}}%</td>
+                            <td><span class="lot-size-highlight">${{zone.lot_size || '-'}}</span></td>
+                            <td><span class="${{statusClass}}">${{statusText}}</span></td>
+                            <td><span class="time-highlight">${{zone.time || '--:--:--'}}</span></td>
+                        </tr>`;
+                    }});
+                    return tableHTML + '</tbody></table>';
+                }}
+
+                function loadAlerts() {{
+                    fetch('/api/alerts')
+                        .then(res => res.json())
+                        .then(alerts => {{
+                            const lastNotifiedTimestamp = localStorage.getItem('lastNotifiedTimestamp') || '';
+                            let latestTimestampThisBatch = lastNotifiedTimestamp;
+
+                            alerts.forEach(alert => {{
+                                if (alert.timestamp > lastNotifiedTimestamp) {{
+                                    const message = `${{alert.stock}} - ${{alert.action}} @ ₹${{alert.price.toFixed(2)}}`;
+                                    addNotification('alert', message, alert);
+                                    if(alert.timestamp > latestTimestampThisBatch) {{
+                                        latestTimestampThisBatch = alert.timestamp;
+                                    }}
+                                }}
+                            }});
+                            
+                            if (latestTimestampThisBatch > lastNotifiedTimestamp) {{
+                                localStorage.setItem('lastNotifiedTimestamp', latestTimestampThisBatch);
+                            }}
+
+                            const content = document.getElementById('alerts-content');
+                            if (alerts.length === 0) {{
+                                content.innerHTML = '<div class="no-data">No alerts today.</div>';
+                                return;
+                            }}
+
+                            let alertsHTML = `<table class="zone-table" id="live-alerts-table">
+                                <thead><tr>
+                                    <th onclick="sortTable(this, 0)" class="sort-desc">Time</th>
+                                    <th onclick="sortTable(this, 1)">Stock</th>
+                                    <th onclick="sortTable(this, 2)">Action</th>
+                                    <th onclick="sortTable(this, 3)">Price</th>
+                                    <th onclick="sortTable(this, 4)">Zone</th>
+                                    <th onclick="sortTable(this, 5)">Lot Size</th>
+                                </tr></thead><tbody>`;
+
+                            alerts.slice().reverse().forEach(alert => {{
+                                const tradingViewUrl = `https://www.tradingview.com/chart/?symbol=NSE:${{alert.stock}}`;
+                                const isSupply = alert.type.toLowerCase().includes('supply');
+                                const actionText = alert.action || (isSupply ? 'BREAKOUT' : 'BREAKDOWN');
+                                const actionClass = isSupply ? 'supply-indicator' : 'demand-indicator';
+
+                                alertsHTML += `<tr class="alert-row ${{isSupply ? 'supply' : 'demand'}}" data-stock="${{alert.stock}}">
+                                    <td><span class="time-highlight">${{formatDateTime(alert.timestamp)}}</span></td>
+                                    <td><strong><a href="${{tradingViewUrl}}" target="_blank">${{alert.stock}}</a></strong></td>
+                                    <td><span class="${{actionClass}}">${{actionText}}</span></td>
+                                    <td>₹${{alert.price.toFixed(2)}}</td>
+                                    <td>₹${{alert.zone_low.toFixed(2)}} - ₹${{alert.zone_high.toFixed(2)}}</td>
+                                    <td><span class="lot-size-highlight">${{alert.lot_size || 'N/A'}}</span></td>
+                                </tr>`;
+                            }});
+
+                            content.innerHTML = alertsHTML + '</tbody></table>';
+                            setTimeout(() => filterAlerts(), 100);
+                        }})
+                        .catch(err => {{
+                            console.error('Error loading alerts:', err);
+                            updateErrorIndicator({{
+                                data_fetch_error: true,
+                                error_message: 'Failed to load alerts'
+                            }});
+                        }});
+                }}
+
+                function runNewScan() {{ 
+                    fetch('/scan')
+                        .then(() => setTimeout(refreshData, 2000))
+                        .catch(err => {{
+                            console.error('Error triggering scan:', err);
+                            updateErrorIndicator({{
+                                data_fetch_error: true,
+                                error_message: 'Failed to trigger scan'
+                            }});
+                        }});
+                }}
+                
+                function refreshData() {{ 
+                    loadAllData(); 
+                    loadAlerts(); 
+                    updateWatchlistCount(); 
+                    loadFmiData(); 
+                    checkErrorStatus();
+                }}
+                
+                function startAutoRefresh() {{ setInterval(refreshData, 30000); }}
+                
+                function updateLastUpdate(isoTime) {{ 
+                    document.getElementById('lastUpdate').textContent = `Last Scan: ${{formatTime(isoTime)}}`; 
+                }}
+
+                function sortTable(th, n) {{
+                    const table = th.closest('table');
+                    if (!table) return;
+                    const tbody = table.tBodies[0];
+                    if (!tbody) return;
+                    const rows = Array.from(tbody.rows);
+                    const currentDir = th.classList.contains('sort-desc') ? 'asc' : 'desc';
+                    
+                    table.querySelectorAll('th').forEach(header => {{
+                        if (header !== th) {{
+                           header.classList.remove('sort-asc', 'sort-desc');
+                        }}
+                    }});
+
+                    th.classList.remove('sort-asc', 'sort-desc');
+                    th.classList.add(`sort-${{currentDir}}`);
+
+                    rows.sort((a, b) => {{
+                        let aText = a.cells[n].textContent.trim();
+                        let bText = b.cells[n].textContent.trim();
+                        
+                        const isTimeColumn = (aText.match(/\d{{4}}-\d{{2}}-\d{{2}}/) || aText.match(/\d{{2}}\/\d{{2}}\/\d{{2}}/));
+
+                        if (isTimeColumn) {{
+                            const aDate = new Date(aText.replace(/(\d{{2}})\/(\d{{2}})\/(\d{{2}})/, '20$3-$2-$1'));
+                            const bDate = new Date(bText.replace(/(\d{{2}})\/(\d{{2}})\/(\d{{2}})/, '20$3-$2-$1'));
+                            const comparison = aDate.getTime() - bDate.getTime();
+                            return currentDir === 'asc' ? comparison : -comparison;
+                        }}
+                        
+                        const aNum = parseFloat(aText.replace(/[₹,]/g, ''));
+                        const bNum = parseFloat(bText.replace(/[₹,]/g, ''));
+                        const aVal = !isNaN(aNum) ? aNum : aText.toLowerCase();
+                        const bVal = !isNaN(bNum) ? bNum : bText.toLowerCase();
+
+                        let comparison = 0;
+                        if (aVal > bVal) comparison = 1;
+                        if (aVal < bVal) comparison = -1;
+                        
+                        return currentDir === 'asc' ? comparison : -comparison;
+                    }});
+
+                    rows.forEach(row => tbody.appendChild(row));
+                }}
+            </script>
+        </body>
+        </html>
+        """
         self.wfile.write(html_content.encode('utf-8'))
 
     def serve_zone_data(self):
