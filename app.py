@@ -13,7 +13,7 @@ import urllib.parse
 import pytz # Library for timezone correction
 
 # Configuration
-bot_token = "7657983245:AAEx45-05EZOKANiaEnJV9M4V1zeKqaSgBM"
+bot_token = "7657983245:AAEx45-05EZOKANiaEnJV9M4V1zeKqaSgBMSUM"
 chat_id = "-4913116305df"
 
 # Lot sizes embedded from fno_lot_sizes.csv
